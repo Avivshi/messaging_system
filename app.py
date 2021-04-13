@@ -2,7 +2,6 @@ import os
 from flask import Flask, jsonify
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
-from db import db
 from blacklist import BLACKLIST
 from resources.user import UserRegister, UserLogin, TokenRefresh, UserLogout
 from resources.message import AllMessages, InboxMessages, SentMessages, ReadMessage, UnreadMessages, SendMessage, DeleteReceivedMessage, DeleteSentMessage
@@ -93,5 +92,6 @@ api.add_resource(DeleteSentMessage, "/messages/sent/<int:message_id>")
 
 
 if __name__ == '__main__':
+    from db import db
     db.init_app(app)
     app.run(port=5000, debug=True)
