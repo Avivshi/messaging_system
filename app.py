@@ -91,7 +91,8 @@ api.add_resource(SendMessage, "/messages/send")
 api.add_resource(DeleteReceivedMessage, "/messages/inbox/<int:message_id>")
 api.add_resource(DeleteSentMessage, "/messages/sent/<int:message_id>")
 
+db.init_app(app)
+
 
 if __name__ == '__main__':
-    db.init_app(app)
     app.run(port=5000, debug=True)
