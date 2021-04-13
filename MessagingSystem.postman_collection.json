@@ -1,0 +1,326 @@
+{
+	"info": {
+		"_postman_id": "8e1bd8b1-bf0d-47e8-bf1d-b312bb37fbb5",
+		"name": "MessagingSystem",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "MessagingSystemAPI",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"adar\",\r\n    \"password\": \"1234\"\r\n}"
+						},
+						"url": {
+							"raw": "{{url}}/register",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"register"
+							]
+						},
+						"description": "Register a new user."
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"tests[\"Access token was not empty\"] = jsonData.access_token !== undefined;\r",
+									"\r",
+									"postman.setEnvironmentVariable(\"jwt_token\", jsonData.access_token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"adar\",\r\n    \"password\": \"1234\"\r\n}"
+						},
+						"url": {
+							"raw": "{{url}}/login",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Login with registered user. This will return access token and refresh token."
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/logout",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"logout"
+							]
+						},
+						"description": "This will logout the current user."
+					},
+					"response": []
+				},
+				{
+					"name": "messages",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/messages",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"messages"
+							]
+						},
+						"description": "This will return all messages sent and received by the user."
+					},
+					"response": []
+				},
+				{
+					"name": "messages/sent",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/messages/sent",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"messages",
+								"sent"
+							]
+						},
+						"description": "This will return all messages sent by the user."
+					},
+					"response": []
+				},
+				{
+					"name": "messages/send",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"receiver\": \"moshe\",\r\n    \"subject\": \"1234\",\r\n    \"message\": \"GREAT!!!\"\r\n}"
+						},
+						"url": {
+							"raw": "{{url}}/messages/send",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"messages",
+								"send"
+							]
+						},
+						"description": "With this, the user can send a message to another user."
+					},
+					"response": []
+				},
+				{
+					"name": "messages/inbox",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/messages/inbox",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"messages",
+								"inbox"
+							]
+						},
+						"description": "This will return all the messages that the user received"
+					},
+					"response": []
+				},
+				{
+					"name": "messages/inbox/unread",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/messages/inbox/unread",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"messages",
+								"inbox",
+								"unread"
+							]
+						},
+						"description": "This will return all messages that the user received but did not read."
+					},
+					"response": []
+				},
+				{
+					"name": "messages/inbox/read",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/messages/inbox/read",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"messages",
+								"inbox",
+								"read"
+							]
+						},
+						"description": "This will return one unread message for the user to read."
+					},
+					"response": []
+				},
+				{
+					"name": "messages/inbox/<int:message_id>",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/messages/inbox/<int:message_id>",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"messages",
+								"inbox",
+								"<int:message_id>"
+							]
+						},
+						"description": "This will delete one message that the user received by its id."
+					},
+					"response": []
+				},
+				{
+					"name": "messages/sent/<int:message_id>",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/messages/sent/<int:message_id>",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"messages",
+								"sent",
+								"<int:message_id>"
+							]
+						},
+						"description": "This will delete one message that the user sent by its id."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

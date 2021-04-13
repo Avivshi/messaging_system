@@ -1,76 +1,97 @@
-from flask import Flask, request
-from flask_restful import Api, Resource
-from datetime import date
+from flask import Flask, jsonify
+from flask_restful import Api
+from flask_jwt_extended import JWTManager
+
+from db import db
+from blacklist import BLACKLIST
+from resources.user import UserRegister, UserLogin, TokenRefresh, UserLogout
+from resources.message import AllMessages, InboxMessages, SentMessages, ReadMessage, UnreadMessages, SendMessage, DeleteReceivedMessage, DeleteSentMessage
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['PROPAGATE_EXCEPTIONS'] = True
 api = Api(app)
 
-
-messages = []
-
-
-class MessagesInbox(Resource):
-    def get(self, owner):
-        owner_messages = [msg for msg in messages if msg['receiver'] == owner]
-        return {'messages': owner_messages}, 200 if owner_messages else 404
-
-
-class ReadMessage(Resource):
-    def get(self, owner):
-        for message in messages:
-            if message['receiver'] == owner and message['is_read'] is False:
-                message['is_read'] = True
-                return message
-        return {'info': "You read all messages"}
+"""
+JWT related configuration. The following functions includes:
+1) add claims to each jwt
+2) customize the token expired error message 
+"""
+app.config['JWT_SECRET_KEY'] = 'SECRET_KEY'
+app.config['JWT_BLACKLIST_ENABLED'] = True
+app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
+jwt = JWTManager(app)
 
 
-class UnreadMessages(Resource):
-    def get(self, owner):
-        owner_unread_messages = [msg for msg in messages if msg['receiver'] == owner and msg['is_read'] is False]
-        return {'messages': owner_unread_messages}, 200 if owner_unread_messages else 404
+# This method will check if a token is blacklisted, and will be called automatically when blacklist is enabled
+@jwt.token_in_blacklist_loader
+def check_if_token_in_blacklist(decrypted_token):
+    return decrypted_token['jti'] in BLACKLIST
 
 
-class DeleteAsReceiver(Resource):
-    def delete(self, owner, subject):
-        global messages
-        messages = [msg for msg in messages if msg['subject'] != subject and msg['receiver'] != owner]
-        return {'info': "message deleted"}
+# The following callbacks are used for customizing jwt response/error messages.
+@jwt.expired_token_loader
+def expired_token_callback():
+    return jsonify({
+        'message': 'The token has expired.',
+        'error': 'token_expired'
+    }), 401
 
 
-class MessagesSent(Resource):
-    def get(self, owner):
-        owner_messages = [msg for msg in messages if msg['sender'] == owner]
-        return {'messages': owner_messages}, 200 if owner_messages else 404
-
-    def post(self, owner):
-        data = request.get_json()
-        message = {
-            'sender': owner,
-            'receiver': data['receiver'],
-            "message": data['message'],
-            "subject": data['subject'],
-            "creation_date": date.today().strftime("%B %d, %Y"),
-            "is_read": False
-        }
-        messages.append(message)
-        return message, 201
+@jwt.invalid_token_loader
+def invalid_token_callback(error):
+    return jsonify({
+        'message': 'Signature verification failed.',
+        'error': 'invalid_token'
+    }), 401
 
 
-class DeleteAsSender(Resource):
-    def delete(self, owner, subject):
-        global messages
-        messages = [msg for msg in messages if msg['subject'] != subject and msg['sender'] != owner]
-        return {'info': "message deleted"}
+@jwt.unauthorized_loader
+def missing_token_callback(error):
+    return jsonify({
+        "description": "Request does not contain an access token.",
+        'error': 'authorization_required'
+    }), 401
 
 
-api.add_resource(MessagesInbox, '/messages/<string:owner>/inbox')
-api.add_resource(ReadMessage, '/messages/<string:owner>/inbox/read')
-api.add_resource(UnreadMessages, '/messages/<string:owner>/inbox/unreadMessages')
-api.add_resource(DeleteAsReceiver, '/messages/<string:owner>/inbox/<string:subject>')
+@jwt.needs_fresh_token_loader
+def token_not_fresh_callback():
+    return jsonify({
+        "description": "The token is not fresh.",
+        'error': 'fresh_token_required'
+    }), 401
 
-api.add_resource(MessagesSent, '/messages/<string:owner>/sent')
-api.add_resource(DeleteAsSender, '/messages/<string:owner>/sent/<string:subject>')
+
+@jwt.revoked_token_loader
+def revoked_token_callback():
+    return jsonify({
+        "description": "The token has been revoked.",
+        'error': 'token_revoked'
+    }), 401
+
+# JWT configuration ends
 
 
-if __name__ == "__main__":
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
+
+api.add_resource(UserRegister, '/register')
+api.add_resource(UserLogin, '/login')
+api.add_resource(UserLogout, '/logout')
+
+api.add_resource(AllMessages, "/messages")
+api.add_resource(InboxMessages, "/messages/inbox")
+api.add_resource(SentMessages, "/messages/sent")
+api.add_resource(UnreadMessages, "/messages/inbox/unread")
+api.add_resource(ReadMessage, "/messages/inbox/read")
+api.add_resource(SendMessage, "/messages/send")
+api.add_resource(DeleteReceivedMessage, "/messages/inbox/<int:message_id>")
+api.add_resource(DeleteSentMessage, "/messages/sent/<int:message_id>")
+
+
+if __name__ == '__main__':
+    db.init_app(app)
     app.run(port=5000, debug=True)
