@@ -14,9 +14,6 @@ class MessageModel(db.Model):
     creation_date = db.Column(db.String())
     is_read = db.Column(db.Boolean())
 
-    # store_id = db.Column(db.Integer, db.ForeignKey('stores.id'))
-    # store = db.relationship('StoreModel')
-
     def __init__(self, sender, receiver, message, subject):
         self.sender = sender
         self.receiver = receiver
@@ -42,7 +39,7 @@ class MessageModel(db.Model):
         if msg:
             msg.is_read = True
             db.session.commit()
-            return msg
+            return msg.json()
         return {"message": "There are no unread messages"}
 
     @classmethod
