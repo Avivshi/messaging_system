@@ -8,7 +8,7 @@ from resources.user import UserRegister, UserLogin, TokenRefresh, UserLogout
 from resources.message import AllMessages, InboxMessages, SentMessages, ReadMessage, UnreadMessages, SendMessage, DeleteReceivedMessage, DeleteSentMessage
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///data.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL1', 'sqlite:///data.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PROPAGATE_EXCEPTIONS'] = True
 api = Api(app)
@@ -91,7 +91,7 @@ api.add_resource(SendMessage, "/messages/send")
 api.add_resource(DeleteReceivedMessage, "/messages/inbox/<int:message_id>")
 api.add_resource(DeleteSentMessage, "/messages/sent/<int:message_id>")
 
-db.init_app(app)
 
 if __name__ == '__main__':
+    db.init_app(app)
     app.run(port=5000, debug=True)
